@@ -1,14 +1,19 @@
 <template>
   <b-container fluid style="height: 100%; position:absolute">
-    <!--b-navbar toggleable="lg" type="dark" variant="info" style="position: absolute; z-index: 100; width: 100%; margin-left:-1em;">
-      <b-navbar-brand href="#">DRT Visualizer</b-navbar-brand>
-      <b-navbar-nav>
-      </b-navbar-nav>
-    </b-navbar-->
     <b-row align-v="stretch" style="height: 100%;">
       <b-col style="height: 100%;" cols="2">
-        <input v-model="controlState.time" />
-        {{ controlState.time }}
+        <p>
+          <b>Time</b>
+          <b-form-input v-model="controlState.time" number="true"></b-form-input>
+          <b>Interval</b>
+          <b-form-input v-model="controlState.interval" number="true"></b-form-input>
+        </p>
+        <p>
+          <span style="color: #5d69b1">Vehicles</span><br />
+          <span style="color: #e58606">Requests</span><br />
+          <span style="color: #99c945">Assignments</span><br />
+          <span style="color: #00ffff">Rebalancing</span>
+        </p>
       </b-col>
       <b-col style="height:100%; margin: 0px 0px 0px 0px; padding: 0px 0px 0px 0px;">
         <MapView :controlState="controlState" />
@@ -28,7 +33,8 @@ export default {
   },
   data: function() {
     var controlState = Vue.observable({
-      time: 46000 // 12 * 3600.0
+      time: 46000, // 12 * 3600.0,
+      interval: 1.0,
     });
 
     return {
@@ -37,7 +43,9 @@ export default {
   },
   mounted: function() {
     setInterval(() => {
-      this.controlState.time += 1;
+      if (Number.isFinite(this.controlState.interval) && Number.isFinite(this.controlState.time)) {
+        this.controlState.time += this.controlState.interval;
+      }
     }, 10);
   }
 }

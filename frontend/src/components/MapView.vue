@@ -12,7 +12,9 @@ export default {
   props: ["controlState"],
   watch: {
     "controlState.time": _.throttle(function() {
-      this.requestedSimulationTime = this.controlState.time;
+      if (Number.isFinite(this.controlState.time)) {
+        this.requestedSimulationTime = this.controlState.time;
+      }
     }, 100)
   },
   data: function() {
