@@ -4,6 +4,8 @@ This repository contains visualisation tools for MATSim's DRT contribution and r
 
 ![Demo](docs/demo.gif "Demo")
 
+[Click here for a demo for the Open Berlin scenario](https://www.youtube.com/watch?v=ZNbW-7OQ7SY)
+
 ## User Guide
 
 As a user, you have two options. Either you download a jar release that is available on Github, or you build a recent jar from the master branch on your own. In any case, you running the visualisation is easy once you have obtained the jar. Here is an example:
