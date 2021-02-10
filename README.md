@@ -14,7 +14,7 @@ As a user, you have two options. Either you download a jar release that is avail
 java -jar drtviz-*.jar --network-path output_network.xml.gz --events-path output_events.xml.gz
 ```
 
-Replace `output_network.xml.gz` and `output_events.xml.gz` with the paths to your generated DRT MATSim output. Once you start the JAR the visualiser starts to process. Note that you can already watch the visualisation while loading (only up to the point the data has been processed; *remark: actually, only works theoretically because of concurrent access for the time being*). To do so, open your browser and go to
+Replace `output_network.xml.gz` and `output_events.xml.gz` with the paths to your generated DRT MATSim output. Once you start the JAR the visualiser starts to process. Note that you can already watch the visualisation while loading (only up to the point the data has been processed). To do so, open your browser and go to
 
 `http://localhost:9000`
 
@@ -29,7 +29,7 @@ To do so, clone this repository and call
 
 `mvn package`
 
-in the repository directory. The process of building and packaging the frontend made of `Vue.js` and `Three.js` is automated with a smart Maven plugin. *(Maven will install Node.js and yarn to do so, this seems to work well on Linux, but not tested on Mac/Windows. Feedback welcome!!)*. After, you should find a built jar in
+in the repository directory. The process of building and packaging the frontend made of `Vue.js` and `Three.js` is automated with a smart Maven plugin. *(Maven will install Node.js and yarn to do so, this seems to work well on Linux, but not tested on Mac/Windows. Feedback welcome!)*. After, you should find a built jar in
 
 `target/drtviz-*.jar`
 
