@@ -8,7 +8,7 @@ This repository contains visualisation tools for MATSim's DRT contribution and r
 
 ## User Guide
 
-As a user, you have two options. Either you download a jar release that is available on Github, or you build a recent jar from the master branch on your own. In any case, you running the visualisation is easy once you have obtained the jar. Here is an example:
+As a user, you have two options. Either you download a [jar release that is available on Github](https://github.com/sebhoerl/drtviz/releases), or you build a recent jar from the master branch on your own. In any case, you running the visualisation is easy once you have obtained the jar. Here is an example:
 
 ```
 java -jar drtviz-*.jar --network-path output_network.xml.gz --events-path output_events.xml.gz
