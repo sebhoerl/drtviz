@@ -1,5 +1,8 @@
 package org.matsim.drtviz.run;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.drt.util.DrtEventsReaders;
 import org.matsim.core.api.experimental.events.EventsManager;
@@ -35,12 +38,15 @@ public class RunVisualisation {
 	static public void main(String[] args) throws ConfigurationException {
 		CommandLine cmd = new CommandLine.Builder(args) //
 				.requireOptions("network-path", "events-path") //
+				.allowOptions("port") //
 				.build();
+
+		int port = cmd.getOption("port").map(Integer::parseInt).orElse(9000);
 
 		Javalin app = Javalin.create(config -> {
 			config.addStaticFiles("/public", Location.CLASSPATH);
 			config.enableCorsForAllOrigins();
-		}).start(9000);
+		}).start(port);
 
 		String networkPath = cmd.getOptionStrict("network-path");
 		String eventsPath = cmd.getOptionStrict("events-path");
@@ -53,6 +59,8 @@ public class RunVisualisation {
 		RequestDatabase requestDatabase = new RequestDatabase();
 		AssignmentDatabase assignmentDatabase = new AssignmentDatabase();
 		RelocationDatabase relocationDatabase = new RelocationDatabase();
+
+		ProgressHandler progressHandler = new ProgressHandler();
 
 		VisualisationItemProvider visualisationProvider = new DefaultVisualisationItemProvider(traversalDatabase,
 				requestDatabase, assignmentDatabase, relocationDatabase, network);
@@ -82,16 +90,34 @@ public class RunVisualisation {
 			}
 		});
 
+		app.get("/endpoint.json", ctx -> {
+			// Means we access the current URL including the port.
+			// If frontend is started by yarn, endpoint.json is delivered directly by the JS
+			// server pointing to localhost:9000
+			Map<String, String> result = new HashMap<>();
+			result.put("endpoint", "");
+			ctx.json(result);
+		});
+
+		app.get("/progress", ctx -> {
+			ProgressItem item = new ProgressItem();
+			item.time = progressHandler.getCurrentTime();
+			item.finished = progressHandler.isFinished();
+			ctx.json(item);
+		});
+
 		EventsManager eventsManager = EventsUtils.createEventsManager();
 		eventsManager.addHandler(new LocationDatabaseListener(locationDatabase));
 		eventsManager.addHandler(new TraversalDatabaseListener(traversalDatabase));
 		eventsManager.addHandler(new RequestDatabaseListener(requestDatabase));
 		eventsManager.addHandler(new AssignmentDatabaseListener(assignmentDatabase));
 		eventsManager.addHandler(new RelocationDatabaseListener(relocationDatabase));
+		eventsManager.addHandler(progressHandler);
 
 		eventsManager.initProcessing();
 		MatsimEventsReader reader = DrtEventsReaders.createEventsReader(eventsManager);
 		reader.readFile(eventsPath);
 		eventsManager.finishProcessing();
+		progressHandler.finish();
 	}
 }

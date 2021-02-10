@@ -20,6 +20,9 @@ Replace `output_network.xml.gz` and `output_events.xml.gz` with the paths to you
 
 You should see the visualisation now.
 
+If your port `9000` is already running another service you can specify another port by adding
+`--port 9050` or similar to the command line.
+
 ### Building a recent jar
 
 To do so, clone this repository and call

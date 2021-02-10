@@ -14,27 +14,33 @@ public class AssignmentDatabase {
 	private final IdMap<Request, Assignment> assignments = new IdMap<>(Request.class);
 
 	public void startAssignment(Id<Request> requestId, Id<Vehicle> vehicleId, double time) {
-		assignments.put(requestId, new Assignment(requestId, vehicleId, time));
+		synchronized (assignments) {
+			assignments.put(requestId, new Assignment(requestId, vehicleId, time));
+		}
 	}
 
 	public void finishAssignment(Id<Request> requestId, double time) {
-		assignments.get(requestId).endTime = time;
+		synchronized (assignments) {
+			assignments.get(requestId).endTime = time;
+		}
 	}
 
 	public Collection<AssignmentState> getAssignments(double time) {
 		List<AssignmentState> result = new LinkedList<>();
 
-		for (Map.Entry<Id<Request>, Assignment> entry : assignments.entrySet()) {
-			Assignment assignment = entry.getValue();
+		synchronized (assignments) {
+			for (Map.Entry<Id<Request>, Assignment> entry : assignments.entrySet()) {
+				Assignment assignment = entry.getValue();
 
-			if (assignment.startTime <= time) {
-				if (assignment.endTime > time) {
-					AssignmentState state = new AssignmentState();
-					state.requestId = assignment.requestId;
-					state.vehicleId = assignment.vehicleId;
-					state.relativeLocation = (time - assignment.startTime)
-							/ (assignment.endTime - assignment.startTime);
-					result.add(state);
+				if (assignment.startTime <= time) {
+					if (assignment.endTime > time) {
+						AssignmentState state = new AssignmentState();
+						state.requestId = assignment.requestId;
+						state.vehicleId = assignment.vehicleId;
+						state.relativeLocation = (time - assignment.startTime)
+								/ (assignment.endTime - assignment.startTime);
+						result.add(state);
+					}
 				}
 			}
 		}

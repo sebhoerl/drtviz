@@ -12,16 +12,20 @@ public class RelocationDatabase {
 	private final List<Relocation> relocations = new LinkedList<>();
 
 	public void addRelocation(double startTime, double endTime, Id<Vehicle> vehicleId, Id<Link> linkId) {
-		relocations.add(new Relocation(startTime, endTime, vehicleId, linkId));
+		synchronized (relocations) {
+			relocations.add(new Relocation(startTime, endTime, vehicleId, linkId));
+		}
 	}
 
 	public Collection<Relocation> getRelocations(double time) {
 		List<Relocation> result = new LinkedList<>();
 
-		for (Relocation relocation : relocations) {
-			if (relocation.startTime <= time) {
-				if (Double.isFinite(relocation.endTime) && relocation.endTime > time) {
-					result.add(relocation);
+		synchronized (relocations) {
+			for (Relocation relocation : relocations) {
+				if (relocation.startTime <= time) {
+					if (Double.isFinite(relocation.endTime) && relocation.endTime > time) {
+						result.add(relocation);
+					}
 				}
 			}
 		}

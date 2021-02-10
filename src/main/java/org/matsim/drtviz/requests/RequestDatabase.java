@@ -15,59 +15,69 @@ public class RequestDatabase {
 
 	public void addRequest(Id<Request> requestId, double submissionTime, Id<Link> originLinkId,
 			Id<Link> destinationLinkId) {
-		requests.put(requestId, new RequestInfo(submissionTime, originLinkId, destinationLinkId));
+		synchronized (requests) {
+			requests.put(requestId, new RequestInfo(submissionTime, originLinkId, destinationLinkId));
+		}
 	}
 
 	public void pickupRequest(Id<Request> requestId, double pickupTime) {
-		RequestInfo request = requests.get(requestId);
+		synchronized (requests) {
+			RequestInfo request = requests.get(requestId);
 
-		if (request == null) {
-			throw new IllegalStateException("Request does not exist");
+			if (request == null) {
+				throw new IllegalStateException("Request does not exist");
+			}
+
+			request.pickupTime = pickupTime;
 		}
-
-		request.pickupTime = pickupTime;
 	}
 
 	public void dropoffRequest(Id<Request> requestId, double dropoffTime) {
-		RequestInfo request = requests.get(requestId);
+		synchronized (requests) {
+			RequestInfo request = requests.get(requestId);
 
-		if (request == null) {
-			throw new IllegalStateException("Request does not exist");
+			if (request == null) {
+				throw new IllegalStateException("Request does not exist");
+			}
+
+			request.dropoffTime = dropoffTime;
 		}
-
-		request.dropoffTime = dropoffTime;
 	}
 
 	public void rejectRequest(Id<Request> requestId, double rejectionTime) {
-		RequestInfo request = requests.get(requestId);
+		synchronized (requests) {
+			RequestInfo request = requests.get(requestId);
 
-		if (request == null) {
-			throw new IllegalStateException("Request does not exist: " + requestId);
+			if (request == null) {
+				throw new IllegalStateException("Request does not exist: " + requestId);
+			}
+
+			request.rejectionTime = rejectionTime;
 		}
-
-		request.rejectionTime = rejectionTime;
 	}
 
 	public Collection<RequestState> getActiveRequests(double time) {
 		List<RequestState> result = new LinkedList<>();
 
-		for (Map.Entry<Id<Request>, RequestInfo> entry : requests.entrySet()) {
-			RequestInfo request = entry.getValue();
+		synchronized (requests) {
+			for (Map.Entry<Id<Request>, RequestInfo> entry : requests.entrySet()) {
+				RequestInfo request = entry.getValue();
 
-			if (request.submissionTime <= time) {
-				if (request.rejectionTime > time && request.dropoffTime > time) {
-					RequestState state = new RequestState();
-					state.requestId = entry.getKey();
-					state.originLinkId = request.originLinkId;
-					state.destinationLinkId = request.destinationLinkId;
-					state.waitingTime = time - request.submissionTime;
+				if (request.submissionTime <= time) {
+					if (request.rejectionTime > time && request.dropoffTime > time) {
+						RequestState state = new RequestState();
+						state.requestId = entry.getKey();
+						state.originLinkId = request.originLinkId;
+						state.destinationLinkId = request.destinationLinkId;
+						state.waitingTime = time - request.submissionTime;
 
-					if (Double.isFinite(request.dropoffTime)) {
-						state.relativeLocation = Math
-								.max((time - request.pickupTime) / (request.dropoffTime - request.pickupTime), 0.0);
+						if (Double.isFinite(request.dropoffTime)) {
+							state.relativeLocation = Math
+									.max((time - request.pickupTime) / (request.dropoffTime - request.pickupTime), 0.0);
+						}
+
+						result.add(state);
 					}
-
-					result.add(state);
 				}
 			}
 		}

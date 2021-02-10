@@ -14,50 +14,54 @@ public class LocationDatabase {
 	private final IdMap<Vehicle, List<Location>> locations = new IdMap<>(Vehicle.class);
 
 	public void addLocation(double time, Id<Vehicle> vehicleId, Id<Link> linkId) {
-		List<Location> vehicleLocations = locations.get(vehicleId);
+		synchronized (locations) {
+			List<Location> vehicleLocations = locations.get(vehicleId);
 
-		if (vehicleLocations == null) {
-			vehicleLocations = new LinkedList<>();
-			locations.put(vehicleId, vehicleLocations);
-		}
-
-		if (vehicleLocations.size() > 0) {
-			Location lastLocation = vehicleLocations.get(vehicleLocations.size() - 1);
-
-			if (lastLocation.linkId.equals(linkId)) {
-				return; // Nothing to do as location has not changed ...
+			if (vehicleLocations == null) {
+				vehicleLocations = new LinkedList<>();
+				locations.put(vehicleId, vehicleLocations);
 			}
 
-			if (time < lastLocation.time) {
-				throw new IllegalStateException("Cannot travel back in time.");
-			}
-		}
+			if (vehicleLocations.size() > 0) {
+				Location lastLocation = vehicleLocations.get(vehicleLocations.size() - 1);
 
-		vehicleLocations.add(new Location(time, linkId));
+				if (lastLocation.linkId.equals(linkId)) {
+					return; // Nothing to do as location has not changed ...
+				}
+
+				if (time < lastLocation.time) {
+					throw new IllegalStateException("Cannot travel back in time.");
+				}
+			}
+
+			vehicleLocations.add(new Location(time, linkId));
+		}
 	}
 
 	public IdMap<Vehicle, Id<Link>> getLocations(double time) {
 		IdMap<Vehicle, Id<Link>> result = new IdMap<>(Vehicle.class);
 
-		for (Map.Entry<Id<Vehicle>, List<Location>> entry : locations.entrySet()) {
-			List<Location> vehicleLocations = entry.getValue();
+		synchronized (locations) {
+			for (Map.Entry<Id<Vehicle>, List<Location>> entry : locations.entrySet()) {
+				List<Location> vehicleLocations = entry.getValue();
 
-			if (vehicleLocations.size() > 0) {
-				Iterator<Location> iterator = vehicleLocations.iterator();
-				Location closestLocation = null;
+				if (vehicleLocations.size() > 0) {
+					Iterator<Location> iterator = vehicleLocations.iterator();
+					Location closestLocation = null;
 
-				while (iterator.hasNext()) {
-					Location location = iterator.next();
+					while (iterator.hasNext()) {
+						Location location = iterator.next();
 
-					if (location.time > time) {
-						break;
+						if (location.time > time) {
+							break;
+						}
+
+						closestLocation = location;
 					}
 
-					closestLocation = location;
-				}
-
-				if (closestLocation != null) {
-					result.put(entry.getKey(), closestLocation.linkId);
+					if (closestLocation != null) {
+						result.put(entry.getKey(), closestLocation.linkId);
+					}
 				}
 			}
 		}

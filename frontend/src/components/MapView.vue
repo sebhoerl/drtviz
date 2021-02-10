@@ -23,6 +23,7 @@ export default {
       tickIntervalId: undefined,
 
       needsRedraw: false, needsUpate: false, isUpdating: false,
+      needsNetworkUpdate: true,
 
       //centerX: 3000.0, centerY: -3000.0,
       centerX: 565615.9484495135, centerY: 5936262.051940319,
@@ -31,7 +32,7 @@ export default {
       isCameraMoving: false, isCameraRotating: false,
       isCameraInitialized: false,
 
-      requestedSimulationTime: 8.0 * 3600.0,
+      requestedSimulationTime: 0.0 * 3600.0,
       currentSimulationTime: 0.0 * 3600.0,
 
       vehicles: {}, requests: {}, assignments: {}, relocations: {},
@@ -63,8 +64,6 @@ export default {
     this.camera.lookAt(3000.0, -3000.0, 0.0);*/
 
     this.updateCamera();
-
-    this.loadNetwork();
 
     this.renderer.domElement.addEventListener("wheel", e => {
       this.cameraDistance += 1000 * e.deltaY;
@@ -102,7 +101,7 @@ export default {
 
     this.renderer.domElement.addEventListener("mousemove", e => {
       if (this.isCameraMoving) {
-        var strength = 100 * this.cameraDistance / 10000.0;
+        var strength = this.cameraDistance / 100.0;
 
         this.centerX -= strength * Math.cos(2.0 * Math.PI * this.groundAngle / 360.0) * e.movementY;
         this.centerY -= strength * Math.sin(2.0 * Math.PI * this.groundAngle / 360.0) * e.movementY;
@@ -151,6 +150,11 @@ export default {
       var needsUpdate = this.needsUpate;
       needsUpdate |= this.requestedSimulationTime != this.currentSimulationTime;
 
+      if (this.needsNetworkUpdate && this.controlState.isEndpointReady) {
+        this.needsNetworkUpdate = false;
+        this.loadNetwork();
+      }
+
       if (needsUpdate) {
         this.startUpdate();
       }
@@ -164,11 +168,11 @@ export default {
       }
     },
     startUpdate: function() {
-      if (!this.isUpdating) {
+      if (!this.isUpdating && this.controlState.isEndpointReady) {
         this.isUpdating = true;
         var requestedSimulationTime = this.requestedSimulationTime;
 
-        axios.post("http://localhost:9000/visualisation", {
+        axios.post(this.controlState.apiEndpoint + "/visualisation", {
           subject: "vehicles", time: requestedSimulationTime
         }).then(response => {
           this.processUpdate(response.data);
@@ -380,7 +384,7 @@ export default {
           points.push(relocation.destination);
 
           var geometry = new THREE.BufferGeometry().setFromPoints(points);
-          var material = new THREE.LineBasicMaterial({ color : 0x00ffff });
+          var material = new THREE.LineBasicMaterial({ color : 0x52bca3 });
           var mesh = new THREE.Line(geometry, material);
 
           relocation.mesh = mesh;
@@ -401,7 +405,7 @@ export default {
       }
     },
     loadNetwork: function() {
-      axios.post("http://localhost:9000/visualisation", {
+      axios.post(this.controlState.apiEndpoint + "/visualisation", {
         subject: "network"
       }).then(response => {
         this.processNetwork(response.data);
