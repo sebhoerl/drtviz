@@ -13,7 +13,7 @@ public class TraversalDatabase {
 	private final IdMap<Vehicle, List<Traversal>> traversals = new IdMap<>(Vehicle.class);
 
 	public void startTraversal(double startTime, Id<Vehicle> vehicleId, Id<Link> linkId) {
-		synchronized (traversals) {
+		synchronized (traversals) {			
 			List<Traversal> vehicleTraversals = traversals.get(vehicleId);
 
 			if (vehicleTraversals == null) {
@@ -38,7 +38,7 @@ public class TraversalDatabase {
 	}
 
 	public void endTraversal(double endTime, Id<Vehicle> vehicleId, Id<Link> linkId) {
-		synchronized (traversals) {
+		synchronized (traversals) {			
 			List<Traversal> vehicleTraversals = traversals.get(vehicleId);
 
 			if (vehicleTraversals == null) {

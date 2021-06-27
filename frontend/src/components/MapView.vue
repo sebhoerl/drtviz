@@ -199,8 +199,16 @@ export default {
         var vehicle = this.vehicles[v.id];
 
         if (vehicle == undefined) {
-          var geometry = new THREE.CylinderGeometry(20.0, 20.0, 50.0, 32);
-          var material = new THREE.MeshBasicMaterial({ color: 0x5d69b1 });
+          var color = 0x5d69b1;
+          var size = 1.0;
+
+          if (v.id.includes("rail")) {
+            color = 0xff0000;
+            size = 2.0;
+          }
+
+          var geometry = new THREE.CylinderGeometry(20.0 * size, 20.0 * size, 50.0 * size, 32);
+          var material = new THREE.MeshBasicMaterial({ color: color });
 
           var mesh = new THREE.Mesh(geometry, material);
           mesh.rotation.x = THREE.Math.degToRad(90);
