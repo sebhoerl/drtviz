@@ -10,6 +10,7 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.drtviz.assignments.AssignmentDatabase;
 import org.matsim.drtviz.assignments.AssignmentDatabase.AssignmentState;
+import org.matsim.drtviz.idle.IdleDatabase;
 import org.matsim.drtviz.relocations.RelocationDatabase;
 import org.matsim.drtviz.relocations.RelocationDatabase.Relocation;
 import org.matsim.drtviz.requests.RequestDatabase;
@@ -23,14 +24,17 @@ public class DefaultVisualisationItemProvider implements VisualisationItemProvid
 	private final RequestDatabase requestDatabase;
 	private final AssignmentDatabase assignmentDatabase;
 	private final RelocationDatabase relocationDatabase;
+	private final IdleDatabase idleDatabase;
 	private final Network network;
 
 	public DefaultVisualisationItemProvider(TraversalDatabase database, RequestDatabase requestDatabase,
-			AssignmentDatabase assignmentDatabase, RelocationDatabase relocationDatabase, Network network) {
+			AssignmentDatabase assignmentDatabase, RelocationDatabase relocationDatabase, IdleDatabase idleDatabase,
+			Network network) {
 		this.assignmentDatabase = assignmentDatabase;
 		this.traversalDatabase = database;
 		this.requestDatabase = requestDatabase;
 		this.relocationDatabase = relocationDatabase;
+		this.idleDatabase = idleDatabase;
 		this.network = network;
 	}
 
@@ -85,6 +89,18 @@ public class DefaultVisualisationItemProvider implements VisualisationItemProvid
 			item.vehicleId = relocation.vehicleId.toString();
 			item.destination = new double[] { link.getCoord().getX(), link.getCoord().getY() };
 			visualisationItem.relocations.add(item);
+		}
+
+		for (Map.Entry<Id<Vehicle>, Id<Link>> entry : idleDatabase.getLocations(time).entrySet()) {
+			Link link = network.getLinks().get(entry.getValue());
+			Coord endCoord = link.getToNode().getCoord();
+
+			VehicleItem vehicleItem = new VehicleItem();
+			vehicleItem.id = entry.getKey().toString();
+			vehicleItem.x = endCoord.getX();
+			vehicleItem.y = endCoord.getY();
+
+			visualisationItem.vehicles.add(vehicleItem);
 		}
 
 		return visualisationItem;
