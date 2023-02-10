@@ -67,13 +67,26 @@ public class TraversalDatabase {
 				List<Traversal> vehicleTraversals = entry.getValue();
 
 				if (vehicleTraversals.size() > 0) {
+					LinkLocation latestLocation = null;
+					
 					for (Traversal traversal : vehicleTraversals) {
-						if (traversal.startTime <= time && traversal.endTime > time) {
+						//if (traversal.startTime <= time && traversal.endTime > time) {
+						if (traversal.startTime <= time) {
 							double relativeLocation = (time - traversal.startTime)
 									/ (traversal.endTime - traversal.startTime);
-							result.put(entry.getKey(), new LinkLocation(traversal.linkId, relativeLocation));
-							break;
+							
+							if (time > traversal.endTime) {
+								relativeLocation = 1.0;
+							}
+							
+							latestLocation = new LinkLocation(traversal.linkId, relativeLocation);
+							// result.put(entry.getKey(), new LinkLocation(traversal.linkId, relativeLocation));
+							//break;
 						}
+					}
+					
+					if (latestLocation != null) {
+						result.put(entry.getKey(), latestLocation);
 					}
 				}
 			}

@@ -41,7 +41,7 @@ export default {
     var controlState = Vue.observable({
       time: 0.0, // 12 * 3600.0,
       interval: 0.0,
-      apiEndpoint: "",
+      apiEndpoint: "127.0.0.1:9005",
       isEndpointReady: false
     });
 

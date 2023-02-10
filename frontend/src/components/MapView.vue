@@ -26,9 +26,9 @@ export default {
       needsNetworkUpdate: true,
 
       //centerX: 3000.0, centerY: -3000.0,
-      centerX: 565615.9484495135, centerY: 5936262.051940319,
+      centerX: 605615.9484495135, centerY: 6236262.051940319,
       cameraDistance: 9000.0,
-      groundAngle: 286.0, sphereAngle: 60.0,
+      groundAngle: 3.16 / 2, sphereAngle: 60.0,
       isCameraMoving: false, isCameraRotating: false,
       isCameraInitialized: false,
 
@@ -66,10 +66,10 @@ export default {
     this.updateCamera();
 
     this.renderer.domElement.addEventListener("wheel", e => {
-      this.cameraDistance += 1000 * e.deltaY;
+      this.cameraDistance += 10 * e.deltaY;
 
-      if (this.cameraDistance < 1000) {
-        this.cameraDistance = 1000.0;
+      if (this.cameraDistance < 100) {
+        this.cameraDistance = 100.0;
       }
 
       this.updateCamera();
@@ -133,7 +133,7 @@ export default {
       }
     });
   },
-  destroyed: function() {
+  unmounted: function() {
     clearInterval(this.tickIntervalId);
   },
   methods: {
@@ -187,7 +187,7 @@ export default {
       this.processVehicles(data);
       this.processRequests(data);
       this.processAssignments(data);
-      this.processRelocations(data);
+      // this.processRelocations(data);
     },
     processVehicles: function(data) {
       var deletableVehicles = {};
@@ -263,7 +263,7 @@ export default {
 
           this.scene.add(mesh);
 
-          geometry = new THREE.SphereGeometry(40, 20, 20);
+          geometry = new THREE.SphereGeometry(20, 20, 20);
           material = new THREE.MeshBasicMaterial({ color: requestColor });
           var dot = new THREE.Mesh(geometry, material);
 
@@ -414,19 +414,59 @@ export default {
     },
     processNetwork: function(data) {
       var points = [];
+      var pointsSms = [];
+      var pointsTerminus = [];
+      var pointsOneway = [];
 
       data.links.forEach(l => {
-        points.push(new THREE.Vector3(l.from[0], l.from[1], 0.0));
-        points.push(new THREE.Vector3(l.to[0], l.to[1], 0.0));
+        if (l.isSms) {
+          if (l.isTerminus) {
+            pointsTerminus.push(new THREE.Vector3(l.from[0], l.from[1], 0.0));
+            pointsTerminus.push(new THREE.Vector3(l.to[0], l.to[1], 0.0));
+          } else if (l.isOneway) {
+            pointsOneway.push(new THREE.Vector3(l.from[0], l.from[1], 0.0));
+            pointsOneway.push(new THREE.Vector3(l.to[0], l.to[1], 0.0));
+          } else {
+            pointsSms.push(new THREE.Vector3(l.from[0], l.from[1], 0.0));
+            pointsSms.push(new THREE.Vector3(l.to[0], l.to[1], 0.0));
+          }
+        } else {
+          points.push(new THREE.Vector3(l.from[0], l.from[1], 0.0));
+          points.push(new THREE.Vector3(l.to[0], l.to[1], 0.0));
+        }
       });
 
       var networkMaterial = new THREE.LineBasicMaterial({
         color: 0xdddddd
       });
 
+      var onewayMaterial = new THREE.LineBasicMaterial({
+        color: 0xce0000
+      });
+
+      var terminusMaterial = new THREE.LineBasicMaterial({
+        color: 0x006aff
+      });
+
+      var smsMaterial = new THREE.LineBasicMaterial({
+        color: 0x000000
+      });
+
       this.networkGeometry = new THREE.BufferGeometry().setFromPoints(points);
       this.networkMesh = new THREE.LineSegments(this.networkGeometry, networkMaterial);
       this.scene.add(this.networkMesh);
+
+      this.onwayNetworkGeometry = new THREE.BufferGeometry().setFromPoints(pointsOneway);
+      this.onewayNetworkMesh = new THREE.LineSegments(this.onwayNetworkGeometry, onewayMaterial);
+      this.scene.add(this.onewayNetworkMesh);
+
+      this.terminusNetworkGeometry = new THREE.BufferGeometry().setFromPoints(pointsTerminus);
+      this.terminusNetworkMesh = new THREE.LineSegments(this.terminusNetworkGeometry, terminusMaterial);
+      this.scene.add(this.terminusNetworkMesh);
+
+      this.smsNetworkGeometry = new THREE.BufferGeometry().setFromPoints(pointsSms);
+      this.smsNetworkMesh = new THREE.LineSegments(this.smsNetworkGeometry, smsMaterial);
+      this.scene.add(this.smsNetworkMesh);
 
       if (!this.isCameraInitialized) {
         this.networkGeometry.computeBoundingBox();
@@ -434,8 +474,15 @@ export default {
         this.centerX = 0.5 * this.networkGeometry.boundingBox.min.x + 0.5 * this.networkGeometry.boundingBox.max.x;
         this.centerY = 0.5 * this.networkGeometry.boundingBox.min.y + 0.5 * this.networkGeometry.boundingBox.max.y;
 
-        this.sphereAngle = 70.0;
+        this.sphereAngle = 60.0;
         this.groundAngle = 0.0;
+
+        this.groundAngle = 90 + 45 + 5;
+
+        this.cameraDistance = 5000;
+
+        this.centerX -= 9000;
+        this.centerY -= 3000;
 
         this.updateCamera();
       }

@@ -20,6 +20,18 @@ public class RequestDatabase {
 		}
 	}
 
+	public void departRequest(Id<Request> requestId, double departureTime) {
+		synchronized (requests) {
+			RequestInfo request = requests.get(requestId);
+
+			if (request == null) {
+				throw new IllegalStateException("Request does not exist");
+			}
+
+			request.departureTime = departureTime;
+		}
+	}
+
 	public void pickupRequest(Id<Request> requestId, double pickupTime) {
 		synchronized (requests) {
 			RequestInfo request = requests.get(requestId);
@@ -63,13 +75,13 @@ public class RequestDatabase {
 			for (Map.Entry<Id<Request>, RequestInfo> entry : requests.entrySet()) {
 				RequestInfo request = entry.getValue();
 
-				if (request.submissionTime <= time) {
+				if (request.departureTime <= time) {
 					if (request.rejectionTime > time && request.dropoffTime > time) {
 						RequestState state = new RequestState();
 						state.requestId = entry.getKey();
 						state.originLinkId = request.originLinkId;
 						state.destinationLinkId = request.destinationLinkId;
-						state.waitingTime = time - request.submissionTime;
+						state.waitingTime = time - request.departureTime;
 
 						if (Double.isFinite(request.dropoffTime)) {
 							state.relativeLocation = Math
@@ -99,6 +111,7 @@ public class RequestDatabase {
 		final Id<Link> destinationLinkId;
 
 		double rejectionTime = Double.POSITIVE_INFINITY;
+		double departureTime = Double.POSITIVE_INFINITY;
 		double pickupTime = Double.POSITIVE_INFINITY;
 		double dropoffTime = Double.POSITIVE_INFINITY;
 
